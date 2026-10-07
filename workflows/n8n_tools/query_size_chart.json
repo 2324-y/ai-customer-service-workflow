@@ -1,0 +1,137 @@
+{
+  "name": "query_size_chart",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "query_size_chart",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ddf76edc-e50f-456f-a43a-29097ff97e3a",
+      "name": "Webhook",
+      "webhookId": "88c593b9-39f0-4bc5-a940-0d44f9e19c64"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tLtnGFTMFyjah8i2",
+          "mode": "list",
+          "cachedResultName": "size_charts",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/tLtnGFTMFyjah8i2"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "category",
+              "keyValue": "={{ $json.body.category.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f6d8ba6b-f2fe-4ce5-aca6-7858f093343f",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet response = {\n  success: false,\n  data: [], // 注意：这里返回的是数组 []\n  error: \"\",\n  trace_id: \"trace-\" + Date.now()\n};\n\n// 过滤掉空数据\nconst validItems = items.filter(item => item.json && Object.keys(item.json).length > 0);\n\nif (validItems.length > 0) {\n  response.success = true;\n  // 把 n8n 的 item 数组转换成普通的 JSON 对象数组\n  response.data = validItems.map(item => item.json);\n} else {\n  response.error = \"未查询到该商品类目的尺码表\";\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "a44e79b6-b00b-4c1e-8c51-426a01fbe597",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "3384b102-db70-442c-841e-48e2f72a37f9",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "88c8cc61-7092-4327-9379-9a0770523ff4",
+  "meta": {
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "gqCfHhQ65ejvl0FL",
+  "tags": []
+}

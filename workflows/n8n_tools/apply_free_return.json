@@ -1,0 +1,137 @@
+{
+  "name": "apply_free_return",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "apply_free_return",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "46c10df3-41ad-405a-9db8-720318b813fd",
+      "name": "Webhook",
+      "webhookId": "156c2d21-f405-4d2e-82a2-7d751a2d8f69"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "9c0FLyEKg5mvU0Dl",
+          "mode": "list",
+          "cachedResultName": "return_orders",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/9c0FLyEKg5mvU0Dl"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "order_id",
+              "keyValue": "={{ $json.body.order_id.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        -160
+      ],
+      "id": "9b9a3470-5725-4c8a-97e3-50237b1b97aa",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet response = {\n  success: false,\n  data: {},\n  error: \"\",\n  trace_id: \"trace-\" + Date.now()\n};\n\n// 插入成功后，Data Table 节点会返回插入的那条数据\nif (items.length > 0 && items[0].json && Object.keys(items[0].json).length > 0) {\n  const insertedRow = items[0].json;\n  response.success = true;\n  // 假设你的表里有个字段叫 return_id 或 id\n  response.data = {\n    return_id: insertedRow.return_id || insertedRow.id || \"UNKNOWN\",\n    status: insertedRow.status || \"待审核\",\n    message: \"退货申请已成功提交，请留意后续审核通知。\"\n  };\n} else {\n  response.error = \"创建退货工单失败，请检查输入参数\";\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -160
+      ],
+      "id": "1790630b-8efe-4fc7-a59d-860de5d5d3bf",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "0678fdc9-cd76-4bdd-a9c8-c9c79118cd08",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "95955ee6-e586-4cbd-b938-a40078eb93f5",
+  "meta": {
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "zszj6xvUjBOKM4vR",
+  "tags": []
+}

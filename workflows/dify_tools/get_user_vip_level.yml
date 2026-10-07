@@ -1,0 +1,261 @@
+app:
+  description: 查询用户的会员等级及对应权益，用于生成差异化补偿方案（如高等级用户优先处理、额外补偿、专属客服）。
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: workflow
+  name: get_user_vip_level
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.7.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: 1789889431634-source-1789889435150-target
+      source: '1789889431634'
+      sourceHandle: source
+      target: '1789889435150'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: code
+      id: 1789889435150--1789889439885-target
+      source: '1789889435150'
+      sourceHandle: source
+      target: '1789889439885'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1789889439885--1789889442970-target
+      source: '1789889439885'
+      sourceHandle: source
+      target: '1789889442970'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: 用户ID
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: user_id
+      height: 109
+      id: '1789889431634'
+      position:
+        x: 80
+        y: 282
+      positionAbsolute:
+        x: 80
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-391
+            key: ''
+            type: text
+            value: "{\n  \"user_id\": \"{{#1789889431634.user_id#}}\"\n}"
+          type: json
+        headers: Content-Type:application/json
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP 请求
+        type: http-request
+        url: http://n8n:5678/webhook/get_user_vip_level
+        variables: []
+      height: 137
+      id: '1789889435150'
+      position:
+        x: 382
+        y: 282
+      positionAbsolute:
+        x: 382
+        y: 282
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        code: "import json\n\ndef main(http_response: str) -> dict:\n    try:\n  \
+          \      if not http_response or not isinstance(http_response, str) or http_response.strip()\
+          \ == \"\":\n            raise ValueError(\"收到 n8n 的响应为空，请检查 n8n 配置。\")\n\
+          \        data = json.loads(http_response)\n        return {\n          \
+          \  \"success\": data.get(\"success\", False),\n            \"data\": data.get(\"\
+          data\", {}),\n            \"error\": data.get(\"error\", \"\"),\n      \
+          \      \"trace_id\": data.get(\"trace_id\", \"\")\n        }\n    except\
+          \ Exception as e:\n        return {\n            \"success\": False,\n \
+          \           \"data\": {},\n            \"error\": f\"解析响应失败: {str(e)}\"\
+          ,\n            \"trace_id\": \"\"\n        }"
+        code_language: python3
+        outputs:
+          data:
+            children: null
+            type: object
+          error:
+            children: null
+            type: string
+          success:
+            children: null
+            type: boolean
+          trace_id:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1789889435150'
+          - body
+          value_type: string
+          variable: http_response
+      height: 52
+      id: '1789889439885'
+      position:
+        x: 684
+        y: 282
+      positionAbsolute:
+        x: 684
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        outputs:
+        - value_selector:
+          - '1789889439885'
+          - success
+          value_type: boolean
+          variable: success
+        - value_selector:
+          - '1789889439885'
+          - data
+          value_type: object
+          variable: data
+        - value_selector:
+          - '1789889439885'
+          - error
+          value_type: string
+          variable: error
+        - value_selector:
+          - '1789889439885'
+          - trace_id
+          value_type: string
+          variable: trace_id
+        selected: false
+        title: 输出
+        type: end
+      height: 168
+      id: '1789889442970'
+      position:
+        x: 986
+        y: 282
+      positionAbsolute:
+        x: 986
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    viewport:
+      x: -543
+      y: 68
+      zoom: 1
+  rag_pipeline_variables: []

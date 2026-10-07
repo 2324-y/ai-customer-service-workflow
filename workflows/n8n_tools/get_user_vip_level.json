@@ -1,0 +1,137 @@
+{
+  "name": "get_user_vip_level",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_user_vip_level",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a0e58e59-3095-4899-b778-691773b92edf",
+      "name": "Webhook",
+      "webhookId": "ff9df0ad-5ac9-4c4f-8aa0-bb7ad221d869"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "6wojIMrkn90Fti8u",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/6wojIMrkn90Fti8u"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.body.user_id.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "b8e6b39f-b2d5-4080-8149-3e9b254201f3",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet response = {\n  success: false,\n  data: {},\n  error: \"\",\n  trace_id: \"trace-\" + Date.now()\n};\n\nif (items.length > 0 && items[0].json && Object.keys(items[0].json).length > 0) {\n  response.success = true;\n  response.data = items[0].json; // 包含 vip_level, total_spent 等\n} else {\n  response.error = \"未查询到该用户的VIP信息\";\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "78210c18-78b1-4d6f-a609-a2a50dc55d54",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "b3838ed8-3737-4f03-8238-82c794725d5b",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f4e9da29-8295-4300-bb53-1259e734ee73",
+  "meta": {
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "VhLbSWN8yDsJVnW6",
+  "tags": []
+}

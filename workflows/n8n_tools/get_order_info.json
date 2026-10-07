@@ -1,0 +1,141 @@
+{
+  "name": "get_order_info",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get-order-info",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        96
+      ],
+      "id": "5041bfa8-27c3-4ca3-98e0-d43224391687",
+      "name": "Webhook",
+      "webhookId": "213bc267-f11c-413b-86a0-d8da1cc2b5b7"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tUQj7nHcpI0n9HwZ",
+          "mode": "list",
+          "cachedResultName": "order_info",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/tUQj7nHcpI0n9HwZ"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.body.user_id.replace(/[{}]/g, '') }}"
+            },
+            {
+              "keyName": "order_id",
+              "keyValue": "={{ $json.body.order_id.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        96
+      ],
+      "id": "4f089ec0-c372-4bf6-8965-23b06d8466bc",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 默认响应格式\nlet response = {\n  success: false,\n  data: {},\n  error: \"\",\n  trace_id: \"trace-\" + Date.now() // 这里模拟生成 trace_id，确保返回值完整\n};\n\nif (items.length > 0 && items[0].json) {\n  response.success = true;\n  response.data = items[0].json; // 把数据库查到的数据塞进 data 里\n} else {\n  response.error = \"未查询到该订单信息\";\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        96
+      ],
+      "id": "c9f8827e-0f83-46ce-82b1-06fac2a89b21",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        96
+      ],
+      "id": "4f93981c-bb62-4613-bcdc-efc8cbca3bad",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "bfff7b3a-13bd-4d42-a0a4-0088beaa9b5c",
+  "meta": {
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "WYgu5sNePTVu7Zoe",
+  "tags": []
+}

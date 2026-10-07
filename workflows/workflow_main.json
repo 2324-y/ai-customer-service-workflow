@@ -1,0 +1,1439 @@
+{
+  "name": "客服--pro",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-gateway",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        -128
+      ],
+      "id": "3f286836-817b-4b3a-a170-3dde646f9ef6",
+      "name": "接收消息",
+      "webhookId": "92aa3cc6-dd6f-4559-a6c0-07ed5672b4d6",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_HTTPHEADERAUTH",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -320
+      ],
+      "id": "b39f9cfa-701c-4e66-9634-cbd49066cc52",
+      "name": "定时触发"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "replay-dataset",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        64
+      ],
+      "id": "8c845b97-de44-4a5d-8cce-20f71a8a9dab",
+      "name": "数据集回放",
+      "webhookId": "e8a93826-3020-4a9e-b554-21e3b8face7e"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=lock:{{ $json.session_id }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4912,
+        240
+      ],
+      "id": "88df2d49-a61f-473d-bc64-8d738ca21d2d",
+      "name": "释放分布式锁",
+      "credentials": {
+        "redis": {
+          "id": "YOUR_REDIS_CREDENTIAL_ID",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_MESSAGES_ID",
+          "mode": "list",
+          "cachedResultName": "messages",
+          "cachedResultUrl": "/projects/YOUR_PROJECT_ID/datatables/YOUR_DATATABLE_MESSAGES_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.session_id }}",
+            "role": "assistant",
+            "content": "={{ $('业务编排').item.json.data.answer }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "role",
+              "displayName": "role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4464,
+        240
+      ],
+      "id": "314af635-e772-4636-bf98-87208388d888",
+      "name": "写入message",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_SESSIONS_ID",
+          "mode": "list",
+          "cachedResultName": "sessions",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/YOUR_DATATABLE_SESSIONS_ID"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('会话状态机').item.json.session_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "active",
+            "last_active_at": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_active_at",
+              "displayName": "last_active_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4240,
+        240
+      ],
+      "id": "b9b2b212-6149-40de-804b-7b9aea3d1f25",
+      "name": "写入sessions",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('tenant_access_token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receive_id: \"YOUR_RECEIVE_ID\", msg_type: \"text\", content: JSON.stringify({ text: $('业务编排').item.json.data.answer || '正在为您转接人工客服，请稍候...' }) }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3792,
+        16
+      ],
+      "id": "924edcac-31d7-4f03-b19e-f50ea3532297",
+      "name": "发送通知",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "dlq:failed_messages",
+        "value": "={{ JSON.stringify($json) }}",
+        "expire": true,
+        "ttl": 604800
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3344,
+        -288
+      ],
+      "id": "2366f54c-9d05-48e8-bd00-d4504b042c34",
+      "name": "死信队列",
+      "credentials": {
+        "redis": {
+          "id": "YOUR_REDIS_CREDENTIAL_ID",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet finalResponse = {\n  success: false,\n  data: {},\n  tool_calls: [],\n  error: \"\",\n  is_handoff: false, // 👈 新增一个字段，用来标记是否转人工\n  trace_id: \"trace-\" + Date.now()\n};\n\nfor (const item of items) {\n  if (item.json && item.json.success !== undefined) {\n    if (item.json.success) {\n      finalResponse.success = true;\n      finalResponse.data = { ...finalResponse.data, ...item.json.data };\n    } else {\n      finalResponse.error = item.json.error || finalResponse.error;\n    }\n  } else {\n    finalResponse.success = true;\n    finalResponse.data = { ...finalResponse.data, ...item.json };\n  }\n}\n\n// 👈 检查 Dify 的回复里是否包含暗号\nif (finalResponse.data && finalResponse.data.answer && finalResponse.data.answer.includes(\"[SYSTEM_ACTION: HANDOFF_REQUESTED]\")) {\n  finalResponse.is_handoff = true;\n}\n\nreturn [{ json: finalResponse }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        64
+      ],
+      "id": "48817645-6d8a-40c9-a906-15e8c1a063be",
+      "name": "业务编排"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:5001/v1/chat-messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "difyApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $('安全与并发控制').item.json.message }}\",\n  \"inputs\": {},\n  \"response_mode\": \"blocking\",\n  \"user\": \"{{ $('安全与并发控制').item.json.user_id }}\",\n  \"conversation_id\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2896,
+        16
+      ],
+      "id": "67149d7c-123b-4a64-8c94-60341a33ca89",
+      "name": "调用路由agent",
+      "retryOnFail": false,
+      "notesInFlow": false,
+      "credentials": {
+        "difyApi": {
+          "id": "YOUR_DIFY_CREDENTIAL_ID",
+          "name": "cover system-pro"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "508b9acd-ba6a-4188-a745-f1ff720b6ae9",
+              "leftValue": "={{ $json.session_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2224,
+        96
+      ],
+      "id": "8c706404-3841-4d51-a03e-ee5346f7f7d3",
+      "name": "判断会话是否存在"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_SESSIONS_ID",
+          "mode": "list",
+          "cachedResultName": "sessions",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/YOUR_DATATABLE_SESSIONS_ID"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('身份鉴权').item.json.session_id }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        96
+      ],
+      "id": "8dd1444e-cf7d-413c-898d-e08838d10491",
+      "name": "加载会话历史",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "=rate_limit:user:{{ $json.user_id }}",
+        "expire": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        16
+      ],
+      "id": "6da5de33-383c-4f9d-acc3-f70aa4c41406",
+      "name": "限流器",
+      "credentials": {
+        "redis": {
+          "id": "YOUR_REDIS_CREDENTIAL_ID",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=lock:{{$('身份鉴权').item.json.session_id }}",
+        "value": "1",
+        "expire": true,
+        "ttl": 30
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        -48
+      ],
+      "id": "9fbc706a-b4a7-4e6f-b1f1-b10059c641e2",
+      "name": "分布式锁",
+      "notesInFlow": false,
+      "alwaysOutputData": false,
+      "credentials": {
+        "redis": {
+          "id": "YOUR_REDIS_CREDENTIAL_ID",
+          "name": "Redis account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_YOUR_DATATABLE_USERS_ID",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/YOUR_YOUR_DATATABLE_USERS_ID"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.raw_input.user_id.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        -48
+      ],
+      "id": "3849a36b-4fd5-4d28-a749-7fbff8a85358",
+      "name": "用户映射表查询",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "59fee64a-874f-4e79-a506-8535cb0f3541",
+              "leftValue": "={{ $json.raw_input.token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "2713a060-ddb2-46a4-a533-c7c7a8306a73",
+      "name": "身份鉴权"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body || item.json;\n  // 提取统一字段，为后续鉴权和并发控制做准备\n  results.push({\n    json: {\n      channel: body.channel || \"unknown\",\n      user_id: body.user_id || \"anonymous\",\n      session_id: body.session_id || `sess-${Date.now()}`, // 如果没传，临时生成\n      message: body.message || body.query || \"\",\n      timestamp: Date.now(),\n      // 修复点：使用纯 JS 生成唯一 ID\n      trace_id: \"trace-\" + Date.now() + \"-\" + Math.random().toString(36).substring(2, 9), \n      raw_input: body // 保留原始数据以备用\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -128
+      ],
+      "id": "f2f04c92-c272-4f10-86c0-3c4e4769d34c",
+      "name": "安全与并发控制"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "19eee32c-629f-482f-9ebd-44380ba87f72",
+              "leftValue": "={{ $json['rate_limit:user:U10086']}}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1776,
+        16
+      ],
+      "id": "6cfd33e7-a9c5-4acb-baf9-71274db51bce",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "active",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2d10a395-8aec-4195-82ca-2af9535ef653"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e5d174a0-a994-48b0-b084-ed3e41a99172",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "handoff",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2672,
+        96
+      ],
+      "id": "8179f47b-c708-4dba-8ece-d34ea1b57fdd",
+      "name": "会话状态机",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_SESSIONS_ID",
+          "mode": "list",
+          "cachedResultName": "sessions",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/YOUR_DATATABLE_SESSIONS_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.session_id }}",
+            "user_id": "={{ $json.user_id }}",
+            "status": "active"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_active_at",
+              "displayName": "last_active_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2448,
+        -96
+      ],
+      "id": "1301b056-26c2-4b9a-b704-552aa9653f06",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 此时上游传进来的数据携带了失败信息\nconst errorMessage = $input.first().json.error || \"未知系统错误\";\n\nreturn [{\n  json: {\n    success: false, // 明确告知系统，这次彻底失败了\n    user_reply: \"抱歉，系统当前繁忙，请稍后再试，或者输入“转人工”联系客服人员。\",\n    raw_error: errorMessage, // 保留真实的错误信息，写入死信队列排查用\n    trace_id: $input.first().json.trace_id || \"trace-failed\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        -288
+      ],
+      "id": "ced3e5f8-7522-4e7a-b7e7-eb0b30ca4dd2",
+      "name": "降级策略"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=lock:{{ $('身份鉴权').item.json.session_id }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3568,
+        -288
+      ],
+      "id": "8360918f-fa7e-4cf6-953d-e178fd8a1d24",
+      "name": "释放分布式锁1",
+      "credentials": {
+        "redis": {
+          "id": "YOUR_REDIS_CREDENTIAL_ID",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"app_id\": \"YOUR_APP_ID\",\n  \"app_secret\": \"YOUR_APP_SECRET\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3568,
+        16
+      ],
+      "id": "9da5d151-1985-4c62-8364-17319422f4ad",
+      "name": "tenant_access_token"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "58b86235-f9a2-4442-abda-10906c5e21f1",
+              "name": "channel",
+              "value": "={{ $json.body.channel || \"api\" }}",
+              "type": "string"
+            },
+            {
+              "id": "f2261f9c-33bf-4b90-9a26-c5c9df1c9dc5",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cbfac35a-6daa-4e84-876d-4e3289d79339",
+              "name": "session_id",
+              "value": "={{ $json.body.session_id || \"sess-\" + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "5a3252b1-77c1-4df5-8637-527482f378fa",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "773a6c57-2e2c-46a6-9748-4bfcb12a4857",
+              "name": "timestamp",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            },
+            {
+              "id": "b193f1e8-7fd2-466c-a219-a9b36031ff75",
+              "name": "trace_id",
+              "value": "=trace- + {{ Math.random().toString(36).substring(2, 15) }}",
+              "type": "string"
+            },
+            {
+              "id": "a7944d88-9d42-4cd3-b753-3891cec7cddf",
+              "name": "token",
+              "value": "={{ $json.headers.authorization || $json.body.token }}",
+              "type": "string"
+            },
+            {
+              "id": "d589d146-9f1d-4747-9b14-75fb5eefc983",
+              "name": "raw_input",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        432,
+        -320
+      ],
+      "id": "5fa89788-2535-43a9-8423-22f67d819b3e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 模拟前端发来的原始数据\nreturn [{\n  json: {\n    body: {\n      channel: \"feishu\",\n      user_id: \"U10086\",\n      session_id: \"sess-20260924-001\",\n      message: \"我175cm 65kg，穿女装上衣什么码？顺便看看有什么优惠券，我的用户ID是U10086\",\n      token: \"Bearer test-token-123456\"\n    },\n    headers: {\n      authorization: \"Bearer test-token-123456\"\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -320
+      ],
+      "id": "63b17722-0484-41f9-b720-3d565002a1e8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{{ JSON.stringify({ code: 200, message: \"success\", reply: $('业务编排').item.json.data.answer || '正在处理中，请稍候...' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5136,
+        240
+      ],
+      "id": "08748d42-0550-4d76-8321-1046a871ea58",
+      "name": "Respond to Webhook",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"app_id\": \"YOUR_APP_ID\",\n  \"app_secret\": \"YOUR_APP_SECRET\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3792,
+        240
+      ],
+      "id": "183a01c2-ddf7-47d7-8072-ff01f794d212",
+      "name": "tenant_access_token1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('tenant_access_token1').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('构造消息').item.json.feishu_body ) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        4016,
+        240
+      ],
+      "id": "eb00b5b8-d222-435e-9446-4349a361b1bf",
+      "name": "转人工通知",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  // 安全容错取值：优先从当前输入拿，拿不到再去上游节点找\n  let userId = data.user_id;\n  let sessionId = data.session_id;\n  \n  if (!userId || !sessionId) {\n    try {\n      const editFields = $('Edit Fields').first();\n      userId = userId || editFields.json.user_id || \"unknown_user\";\n      sessionId = sessionId || editFields.json.session_id || \"unknown_session\";\n    } catch (e) {\n      userId = userId || \"unknown_user\";\n      sessionId = sessionId || \"unknown_session\";\n    }\n  }\n  \n  const reason = data.reason || \"用户主动请求转人工\";\n  \n  // 构造飞书交互式卡片内容（高级卡片）\n  const cardContent = {\n    config: {\n      wide_screen_mode: true\n    },\n    header: {\n      template: \"red\", // 红色标题，警示客服\n      title: {\n        tag: \"plain_text\",\n        content: \"🚨 客服升级请求\"\n      }\n    },\n    elements: [\n      {\n        tag: \"markdown\",\n        content: `**用户ID**: ${userId}\\n**会话ID**: ${sessionId}`\n      },\n      {\n        tag: \"hr\" // 分割线\n      },\n      {\n        tag: \"markdown\",\n        content: `**转人工原因**: ${reason}`\n      },\n      {\n        tag: \"hr\"\n      },\n      {\n        tag: \"markdown\",\n        content: `**时间**: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`\n      }\n    ]\n  };\n\n  results.push({\n    json: {\n      // 飞书 API 要求的完整 Body\n      feishu_body: {\n        receive_id: "YOUR_RECEIVE_ID", // ⚠️ 替换为你真实的飞书客服群 ID\n        msg_type: \"interactive\", // 👈 固定为交互式卡片\n        content: JSON.stringify(cardContent) // 👈 卡片内容必须序列化成字符串\n      },\n      // 保留数据供下游使用\n      user_id: userId,\n      session_id: sessionId,\n      reason: reason,\n      user_reply: \"好的，正在为您转接人工客服，请稍候...\"\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3568,
+        240
+      ],
+      "id": "5d13f82f-ff96-4361-a794-b428d1d1c5dd",
+      "name": "构造消息"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_MESSAGES_ID",
+          "mode": "list",
+          "cachedResultName": "messages",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/YOUR_DATATABLE_MESSAGES_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.session_id }}",
+            "role": "user",
+            "content": "={{ $('安全与并发控制').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "role",
+              "displayName": "role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4688,
+        240
+      ],
+      "id": "cd2a8b4d-edac-43df-9c06-f77e1225e51c",
+      "name": "Insert-user"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0274df70-de83-4566-b317-7214af6c083f",
+              "leftValue": "={{ $json.is_handoff }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3344,
+        64
+      ],
+      "id": "2ef48ada-37ad-4e2d-a099-c1f76d15c487",
+      "name": "是否转人工"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ JSON.stringify({ code: 500, message: \"fail\", reply: $json.user_reply || '系统当前繁忙，请稍后再试。' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3792,
+        -288
+      ],
+      "id": "e7c8dc4e-d89a-4977-8e1a-506855a87090",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "定时触发": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "接收消息": {
+      "main": [
+        [
+          {
+            "node": "安全与并发控制",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据集回放": {
+      "main": [
+        [
+          {
+            "node": "安全与并发控制",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "写入message": {
+      "main": [
+        [
+          {
+            "node": "Insert-user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "写入sessions": {
+      "main": [
+        [
+          {
+            "node": "写入message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发送通知": {
+      "main": [
+        [
+          {
+            "node": "写入sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "业务编排": {
+      "main": [
+        [
+          {
+            "node": "是否转人工",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用路由agent": {
+      "main": [
+        [
+          {
+            "node": "业务编排",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "降级策略",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断会话是否存在": {
+      "main": [
+        [
+          {
+            "node": "会话状态机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "加载会话历史": {
+      "main": [
+        [
+          {
+            "node": "判断会话是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "限流器": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "分布式锁": {
+      "main": [
+        [
+          {
+            "node": "限流器",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "降级策略",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "用户映射表查询": {
+      "main": [
+        [
+          {
+            "node": "分布式锁",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "身份鉴权": {
+      "main": [
+        [
+          {
+            "node": "用户映射表查询",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "降级策略",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "安全与并发控制": {
+      "main": [
+        [
+          {
+            "node": "身份鉴权",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "降级策略",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "加载会话历史",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "会话状态机": {
+      "main": [
+        [
+          {
+            "node": "调用路由agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "构造消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "会话状态机",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "死信队列": {
+      "main": [
+        [
+          {
+            "node": "释放分布式锁1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "降级策略": {
+      "main": [
+        [
+          {
+            "node": "死信队列",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tenant_access_token": {
+      "main": [
+        [
+          {
+            "node": "发送通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "安全与并发控制",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "释放分布式锁": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tenant_access_token1": {
+      "main": [
+        [
+          {
+            "node": "转人工通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构造消息": {
+      "main": [
+        [
+          {
+            "node": "tenant_access_token1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "转人工通知": {
+      "main": [
+        [
+          {
+            "node": "写入sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert-user": {
+      "main": [
+        [
+          {
+            "node": "释放分布式锁",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "是否转人工": {
+      "main": [
+        [
+          {
+            "node": "构造消息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "tenant_access_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "释放分布式锁1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4b570709-8994-48b1-a0ae-f5b78b87d5ef",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "rZJVe1IuktEd6QtW",
+  "tags": []
+}

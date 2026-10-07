@@ -1,0 +1,137 @@
+{
+  "name": "get_coupon_info",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_coupon_info",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        96
+      ],
+      "id": "423aaad2-20b9-4c29-93a0-ed45d51d8a98",
+      "name": "Webhook",
+      "webhookId": "651b3d08-df7c-4a0d-8fdd-225eb6ce5a0b"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CtksaNOVeZRIax9D",
+          "mode": "list",
+          "cachedResultName": "coupons",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/CtksaNOVeZRIax9D"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.body.user_id.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        96
+      ],
+      "id": "fcc6ab21-1277-4919-a0b0-b26637f4e614",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet response = {\n  success: false,\n  data: [],\n  error: \"\",\n  trace_id: \"trace-\" + Date.now()\n};\n\nconst validItems = items.filter(item => item.json && Object.keys(item.json).length > 0);\n\nif (validItems.length > 0) {\n  response.success = true;\n  response.data = validItems.map(item => item.json); // 包含 coupon_code, amount 等\n} else {\n  response.error = \"该用户暂无可用优惠券\";\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        96
+      ],
+      "id": "8f146094-81f7-4363-b421-cd52ce2d3427",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        96
+      ],
+      "id": "6afb4154-8d3a-46e7-ac62-8a45d083fe8e",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "df85f433-bf0d-4f82-8e1c-6be603f7df2b",
+  "meta": {
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "trBZcwhSPtRvR7Mn",
+  "tags": []
+}

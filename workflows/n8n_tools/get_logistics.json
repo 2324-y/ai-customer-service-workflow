@@ -1,0 +1,137 @@
+{
+  "name": "get_logistics",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_logistics",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        -112
+      ],
+      "id": "f297907c-56a1-49f1-b70c-9b700dc57073",
+      "name": "Webhook",
+      "webhookId": "2264ddf1-f742-4662-9e90-808e04d23bd0"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "PU9egB4dBeMzxakx",
+          "mode": "list",
+          "cachedResultName": "logistics",
+          "cachedResultUrl": "/projects/frJpjBNz87EXUl4S/datatables/PU9egB4dBeMzxakx"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "order_id",
+              "keyValue": "={{ $json.body.order_id.replace(/[{}]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        -112
+      ],
+      "id": "90482846-5af5-4332-af4a-ba948c523f6b",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet response = {\n  success: false,\n  data: {},\n  error: \"\",\n  trace_id: \"trace-\" + Date.now()\n};\n\n// 检查是否查到数据，且不是空对象\nif (items.length > 0 && items[0].json && Object.keys(items[0].json).length > 0) {\n  response.success = true;\n  response.data = items[0].json; // 包含 company, status, tracking_number 等\n} else {\n  response.error = \"未查询到该订单的物流信息\";\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -112
+      ],
+      "id": "87ae5514-e1e1-4836-aeb1-ca056e16871b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        -112
+      ],
+      "id": "1569035d-323d-4bd8-a22f-ebcd61fad4f9",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1e7afefb-090c-454b-8d17-46a6561df10b",
+  "meta": {
+    "instanceId": "75f7f11c35f6bf44973ce3363d3f7250ab6f508df6f13362ed842fb10fcfe822"
+  },
+  "nodeGroups": [],
+  "id": "vgQiZSAclIvFhNjE",
+  "tags": []
+}

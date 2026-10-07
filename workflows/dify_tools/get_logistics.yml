@@ -1,0 +1,274 @@
+app:
+  description: 用户询问物流进度，或售后 Agent 在处理退货时需确认商品是否已签收（判断退货条件）。
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: workflow
+  name: get_logistics
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.7.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: 1789889082605-source-1789889088678-target
+      source: '1789889082605'
+      sourceHandle: source
+      target: '1789889088678'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: code
+      id: 1789889088678--1789889094366-target
+      source: '1789889088678'
+      sourceHandle: source
+      target: '1789889094366'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1789889094366--1789889096889-target
+      source: '1789889094366'
+      sourceHandle: source
+      target: '1789889096889'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: 订单编号
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: order_id
+        - default: ''
+          hint: ''
+          label: 快递单号
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: tracking_number
+      height: 135
+      id: '1789889082605'
+      position:
+        x: 80
+        y: 282
+      positionAbsolute:
+        x: 80
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-461
+            key: ''
+            type: text
+            value: "{\n  \"order_id\": \"{{{#1789889082605.order_id#}}}\",\n  \"tracking_number\"\
+              : \"{{{#1789889082605.tracking_number#}}}\"\n}"
+          type: json
+        headers: Content-Type:application/json
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP 请求
+        type: http-request
+        url: http://n8n:5678/webhook/get_logistics
+        variables: []
+      height: 137
+      id: '1789889088678'
+      position:
+        x: 382
+        y: 282
+      positionAbsolute:
+        x: 382
+        y: 282
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        code: "import json\n\ndef main(http_response: str) -> dict:\n    try:\n  \
+          \      if not http_response or not isinstance(http_response, str) or http_response.strip()\
+          \ == \"\":\n            raise ValueError(\"收到 n8n 的响应为空。\")\n        \n\
+          \        data = json.loads(http_response)\n        raw_data = data.get(\"\
+          data\", {})\n        \n        # 关键：兼容处理。如果 n8n 返回的是数组，包装成对象；否则保持原样\n  \
+          \      if isinstance(raw_data, list):\n            final_data = {\n    \
+          \            \"items\": raw_data,\n                \"count\": len(raw_data)\n\
+          \            }\n        else:\n            final_data = raw_data\n     \
+          \   \n        return {\n            \"success\": data.get(\"success\", False),\n\
+          \            \"data\": final_data,\n            \"error\": data.get(\"error\"\
+          , \"\"),\n            \"trace_id\": data.get(\"trace_id\", \"\")\n     \
+          \   }\n    except Exception as e:\n        return {\n            \"success\"\
+          : False,\n            \"data\": {},\n            \"error\": f\"解析响应失败: {str(e)}\"\
+          ,\n            \"trace_id\": \"\"\n        }"
+        code_language: python3
+        outputs:
+          data:
+            children: null
+            type: object
+          error:
+            children: null
+            type: string
+          success:
+            children: null
+            type: boolean
+          trace_id:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1789889088678'
+          - body
+          value_type: string
+          variable: http_response
+      height: 52
+      id: '1789889094366'
+      position:
+        x: 684
+        y: 282
+      positionAbsolute:
+        x: 684
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        outputs:
+        - value_selector:
+          - '1789889094366'
+          - success
+          value_type: boolean
+          variable: success
+        - value_selector:
+          - '1789889094366'
+          - data
+          value_type: object
+          variable: data
+        - value_selector:
+          - '1789889094366'
+          - error
+          value_type: string
+          variable: error
+        - value_selector:
+          - '1789889094366'
+          - trace_id
+          value_type: string
+          variable: trace_id
+        selected: false
+        title: 输出
+        type: end
+      height: 168
+      id: '1789889096889'
+      position:
+        x: 986
+        y: 282
+      positionAbsolute:
+        x: 986
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    viewport:
+      x: -543
+      y: 68
+      zoom: 1
+  rag_pipeline_variables: []
